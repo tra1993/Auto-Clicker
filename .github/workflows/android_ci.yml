@@ -40,14 +40,17 @@ jobs:
           npm run build
         
       - name: 6. Install Capacitor CLI Globally (FIX for npx issue)
-        # cap executable ကို ချက်ချင်း run နိုင်ရန် install လုပ်သည်
         run: npm install -g @capacitor/cli
 
-      - name: 7. Capacitor Sync (Assets to Android)
+      - name: 7. Add Android Platform (MUST RUN FIRST)
+        # Android folder မရှိသေးပါက ဖန်တီးပေးရန်
+        run: npx cap add android
+
+      - name: 8. Capacitor Sync (Assets to Android)
+        # ယခုမှသာ web assets များကို အသစ်ဖန်တီးထားသော android folder ထဲသို့ ထည့်သွင်းနိုင်သည်
         run: npx cap sync android
 
-      - name: 8. Create Keystore File from Secret (လုံခြုံရေးအရ အရေးကြီးဆုံးအဆင့်)
-        # KEYSTORE_BASE64 Secret ကို decode လုပ်ပြီး release.keystore ဖိုင်အဖြစ် ဖန်တီးသည်။
+      - name: 9. Create Keystore File from Secret (လုံခြုံရေးအရ အရေးကြီးဆုံးအဆင့်)
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
           if [ -s android/app/release.keystore ]; then
@@ -57,25 +60,23 @@ jobs:
             exit 1
           fi
 
-      - name: 9. Configure Gradle Signing Properties
-        # Gradle အတွက် signing credentials များကို secrets မှတဆင့် ထည့်သွင်းပေးသည်
+      - name: 10. Configure Gradle Signing Properties
         run: |
           echo "storeFile=release.keystore" > android/app/signing.properties
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/app/signing.properties
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/app/signing.properties
           echo "storePassword=${{ secrets.KEY_PASSWORD }}" >> android/app/signing.properties
           
-      - name: 10. Run Gradle Release Build (AAB/APK)
-        # Release Build ကို တည်ဆောက်ပြီး Signing Properties ကို အသုံးပြုသည်
+      - name: 11. Run Gradle Release Build (AAB/APK)
         run: cd android && ./gradlew assembleRelease
         
-      - name: 11. Upload Production APK as Artifact
+      - name: 12. Upload Production APK as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-release-apk
           path: android/app/build/outputs/apk/release/app-release.apk
           
-      - name: 12. Upload Production AAB (Bundle) as Artifact
+      - name: 13. Upload Production AAB (Bundle) as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-release-aab
