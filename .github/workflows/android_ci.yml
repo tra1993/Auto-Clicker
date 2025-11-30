@@ -39,10 +39,14 @@ jobs:
           npm install
           npm run build
         
-      - name: 6. Capacitor Sync (Assets to Android)
+      - name: 6. Install Capacitor CLI Globally (FIX for npx issue)
+        # cap executable ကို ချက်ချင်း run နိုင်ရန် install လုပ်သည်
+        run: npm install -g @capacitor/cli
+
+      - name: 7. Capacitor Sync (Assets to Android)
         run: npx cap sync android
 
-      - name: 7. Create Keystore File from Secret (လုံခြုံရေးအရ အရေးကြီးဆုံးအဆင့်)
+      - name: 8. Create Keystore File from Secret (လုံခြုံရေးအရ အရေးကြီးဆုံးအဆင့်)
         # KEYSTORE_BASE64 Secret ကို decode လုပ်ပြီး release.keystore ဖိုင်အဖြစ် ဖန်တီးသည်။
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
@@ -53,7 +57,7 @@ jobs:
             exit 1
           fi
 
-      - name: 8. Configure Gradle Signing Properties
+      - name: 9. Configure Gradle Signing Properties
         # Gradle အတွက် signing credentials များကို secrets မှတဆင့် ထည့်သွင်းပေးသည်
         run: |
           echo "storeFile=release.keystore" > android/app/signing.properties
@@ -61,18 +65,18 @@ jobs:
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/app/signing.properties
           echo "storePassword=${{ secrets.KEY_PASSWORD }}" >> android/app/signing.properties
           
-      - name: 9. Run Gradle Release Build (AAB/APK)
+      - name: 10. Run Gradle Release Build (AAB/APK)
         # Release Build ကို တည်ဆောက်ပြီး Signing Properties ကို အသုံးပြုသည်
         run: cd android && ./gradlew assembleRelease
         
-      - name: 10. Upload Production APK as Artifact
+      - name: 11. Upload Production APK as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-release-apk
           path: android/app/build/outputs/apk/release/app-release.apk
           
-      - name: 11. Upload Production AAB (Bundle) as Artifact
+      - name: 12. Upload Production AAB (Bundle) as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-release-aab
-          path: android/app/build/outputs/bundle/release/app-release.aab 
+          path: android/app/build/outputs/bundle/release/app-release.aab
