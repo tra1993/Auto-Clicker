@@ -1,0 +1,6 @@
+{
+  "appId": "com.tra1993.autoclicker",
+  "appName": "AutoClicker",
+  "webDir": "build",
+  "bundledWebRuntime": false
+}
